@@ -12,4 +12,7 @@ public class PlayerSkin
     public ulong SteamId;
     public string Knife;
     public Dictionary<int, int> Skin;
+
+    // ReSharper disable once InconsistentNaming
+    public string _class;
 }
