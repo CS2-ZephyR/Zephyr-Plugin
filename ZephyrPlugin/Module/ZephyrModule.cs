@@ -15,9 +15,10 @@ public abstract class ZephyrModule
     public static readonly List<ZephyrModule> Modules = new()
     {
         new Whitelist.Module(),
-        new MatchPause.Module(),
+        new CustomSkin.Module(),
         new ColoredSmoke.Module(),
-        new CustomSkin.Module()
+        new MatchManager.Module(),
+        new ItemManager.Module(),
     };
 
     protected ZephyrModule(string moduleName)
