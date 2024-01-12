@@ -175,16 +175,11 @@ public static class SkinUtil
 
 	public static void RefreshWeapons(CCSPlayerController player)
 	{
-		if (!player.IsValid() || player.PlayerPawn.Value == null || !player.PawnIsAlive) return;
-		if (player.PlayerPawn.Value.WeaponServices == null || player.PlayerPawn.Value.ItemServices == null) return;
+		if (!player.IsValid() || !player.PawnIsAlive || player.PlayerPawn.Value?.WeaponServices == null) return;
 
-		var weapons = player.PlayerPawn.Value.WeaponServices.MyWeapons;
-		if (weapons.Count <= 0) return;
-
-		foreach (var weapon in weapons)
+		foreach (var weapon in player.PlayerPawn.Value.WeaponServices.MyWeapons)
 		{
-			if (!weapon.IsValid || weapon.Value == null || !weapon.Value.IsValid) continue;
-			if (weapon.Index <= 0 || !weapon.Value.DesignerName.Contains("weapon_")) continue;
+			if (!weapon.IsValid || weapon.Value == null || !weapon.Value.IsValid || !weapon.Value.DesignerName.Contains("weapon_")) continue;
 
 			if (weapon.Value.DesignerName.Contains("knife") || weapon.Value.DesignerName.Contains("bayonet"))
 			{
