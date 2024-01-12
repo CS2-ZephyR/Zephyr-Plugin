@@ -129,9 +129,11 @@ public static class SkinUtil
 		_plugin = plugin;
 	}
 
-	public static void ChangeWeaponAttributes(CEconEntity weapon, CCSPlayerController player, bool isKnife = false)
+	public static void ChangeWeaponAttributes(CBasePlayerWeapon weapon, CCSPlayerController player)
 	{
 		if (!player.IsValid()) return;
+
+		var isKnife = weapon.DesignerName.Contains("knife") || weapon.DesignerName.Contains("bayonet");
 
 		if (isKnife && !Module.PlayerKnife.ContainsKey(player.SteamID) || isKnife && Module.PlayerKnife[player.SteamID] == "weapon_knife") return;
 
@@ -140,17 +142,12 @@ public static class SkinUtil
 
 		if (isKnife) weapon.AttributeManager.Item.EntityQuality = 3;
 		weapon.AttributeManager.Item.ItemID = 16384;
-		weapon.AttributeManager.Item.ItemIDLow = 16384 & 0xFFFFFFFF;
-		// ReSharper disable once ShiftExpressionRealShiftCountIsZero
-		weapon.AttributeManager.Item.ItemIDHigh = weapon.AttributeManager.Item.ItemIDLow >> 32;
+		weapon.AttributeManager.Item.ItemIDLow = 16384;
+		weapon.AttributeManager.Item.ItemIDHigh = 0;
 		weapon.FallbackPaintKit = paint;
 		weapon.FallbackSeed = 0;
-		weapon.FallbackWear = 0.001F;
-
-		if (isKnife || weapon.CBodyComponent?.SceneNode == null) return;
-
-		var skeleton = GetSkeletonInstance(weapon.CBodyComponent.SceneNode);
-		skeleton.ModelState.MeshGroupMask = 2;
+		weapon.FallbackWear = 0.00001F;
+		weapon.FallbackStatTrak = isKnife ? -1 : 1234;
 	}
 
 	public static void GiveKnife(CCSPlayerController player)
@@ -176,15 +173,6 @@ public static class SkinUtil
 		return weapons != null && weapons.Where(weapon => weapon.IsValid && weapon.Value != null && weapon.Value.IsValid).Any(weapon => weapon.Value.DesignerName.Contains("knife") || weapon.Value.DesignerName.Contains("bayonet"));
 	}
 
-	public static void RefreshSkins(CCSPlayerController player)
-	{
-		if (!player.IsValid() || !player!.PawnIsAlive) return;
-
-		_plugin.AddTimer(0.18f, () => NativeAPI.IssueClientCommand((int)player.Index - 1, "slot3"));
-		_plugin.AddTimer(0.25f, () => NativeAPI.IssueClientCommand((int)player.Index - 1, "slot2"));
-		_plugin.AddTimer(0.38f, () => NativeAPI.IssueClientCommand((int)player.Index - 1, "slot1"));
-	}
-
 	public static void RefreshWeapons(CCSPlayerController player)
 	{
 		if (!player.IsValid() || player.PlayerPawn.Value == null || !player.PawnIsAlive) return;
@@ -205,29 +193,11 @@ public static class SkinUtil
 			}
 			else
 			{
-				if (!WeaponIndex.ContainsKey(weapon.Value.AttributeManager.Item.ItemDefinitionIndex)) continue;
-
-				var clip1 = weapon.Value.Clip1;
-				var reservedAmmo = weapon.Value.ReserveAmmo[0];
-				var weaponIndex = WeaponIndex[weapon.Value.AttributeManager.Item.ItemDefinitionIndex];
+				if (!WeaponIndex.TryGetValue(weapon.Value.AttributeManager.Item.ItemDefinitionIndex, out var weaponIndex)) return;
 
 				player.RemoveItemByDesignerName(weapon.Value.DesignerName, true);
-				CBasePlayerWeapon newWeapon = new(player.GiveNamedItem(weaponIndex));
-
-				Server.NextFrame(() =>
-				{
-					newWeapon.Clip1 = clip1;
-					newWeapon.ReserveAmmo[0] = reservedAmmo;
-				});
+				player.GiveNamedItem(weaponIndex);
 			}
 		}
-
-		RefreshSkins(player);
-	}
-
-	private static CSkeletonInstance GetSkeletonInstance(NativeObject node)
-	{
-		var getSkeletonInstance = VirtualFunction.Create<nint, nint>(node.Handle, 8);
-		return new CSkeletonInstance(getSkeletonInstance(node.Handle));
 	}
 }

@@ -18,7 +18,6 @@ public partial class Module
 		Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
 		Plugin.RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
 		Plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart, HookMode.Pre);
-		Plugin.RegisterEventHandler<EventItemPurchase>(OnEventItemPurchasePost);
 
 		Plugin.HookEntityOutput("weapon_knife", "OnPlayerPickup", OnPickup);
 	}
@@ -45,10 +44,10 @@ public partial class Module
 	private void OnEntityCreated(CEntityInstance entity)
 	{
 		var designerName = entity.DesignerName;
+
 		if (!SkinUtil.WeaponList.ContainsKey(designerName)) return;
 
 		var weapon = new CBasePlayerWeapon(entity.Handle);
-		var isKnife = designerName.Contains("knife") || designerName.Contains("bayonet");
 
 		Server.NextFrame(() =>
 		{
@@ -60,19 +59,8 @@ public partial class Module
 			var player = Utilities.GetPlayerFromIndex((int)pawn.Controller.Index);
 			if (!player.IsValid()) return;
 
-			SkinUtil.ChangeWeaponAttributes(weapon, player, isKnife);
+			SkinUtil.ChangeWeaponAttributes(weapon, player);
 		});
-	}
-
-	private HookResult OnEventItemPurchasePost(EventItemPurchase @event, GameEventInfo info)
-	{
-		var player = @event.Userid;
-
-		if (!player.IsValid()) return HookResult.Continue;
-
-		Plugin.AddTimer(0.2f, () => SkinUtil.RefreshSkins(player));
-
-		return HookResult.Continue;
 	}
 
 	private HookResult OnPickup(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
@@ -135,13 +123,10 @@ public partial class Module
 
 		if (player == null || !player.IsValid || player.IsBot) return HookResult.Continue;
 
-		if (!SkinUtil.HasKnife(player))
-		{
-			PlayerPickup[player.SteamID] = 0;
-			Plugin.AddTimer(0.1f, () => SkinUtil.GiveKnife(player));
-		}
+		if (SkinUtil.HasKnife(player)) return HookResult.Continue;
 
-		Plugin.AddTimer(0.3f, () => SkinUtil.RefreshSkins(player));
+		PlayerPickup[player.SteamID] = 0;
+		Plugin.AddTimer(0.1f, () => SkinUtil.GiveKnife(player));
 
 		return HookResult.Continue;
 	}
