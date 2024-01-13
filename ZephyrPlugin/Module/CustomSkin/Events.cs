@@ -17,6 +17,7 @@ public partial class Module
 
 		Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
 		Plugin.RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
+		Plugin.RegisterEventHandler<EventItemPurchase>(OnEventItemPurchasePost);
 		Plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart, HookMode.Pre);
 
 		Plugin.HookEntityOutput("weapon_knife", "OnPlayerPickup", OnPickup);
@@ -128,6 +129,8 @@ public partial class Module
 		PlayerPickup[player.SteamID] = 0;
 		Plugin.AddTimer(0.1f, () => SkinUtil.GiveKnife(player));
 
+		Plugin.AddTimer(0.3f, () => SkinUtil.RefreshSkins(player));
+
 		return HookResult.Continue;
 	}
 
@@ -136,6 +139,17 @@ public partial class Module
 		NativeAPI.IssueServerCommand("mp_t_default_melee \"\"");
 		NativeAPI.IssueServerCommand("mp_ct_default_melee \"\"");
 		NativeAPI.IssueServerCommand("mp_equipment_reset_rounds 0");
+
+		return HookResult.Continue;
+	}
+
+	private HookResult OnEventItemPurchasePost(EventItemPurchase @event, GameEventInfo info)
+	{
+		var player = @event.Userid;
+
+		if (!player.IsValid()) return HookResult.Continue;
+
+		Plugin.AddTimer(0.2f, () => SkinUtil.RefreshSkins(player));
 
 		return HookResult.Continue;
 	}
