@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using MongoDB.Driver;
-using ZephyrPlugin.Module.Whitelist.Util;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.Whitelist;
@@ -36,7 +33,7 @@ public partial class Module
             {
                 Server.NextFrame(() =>
                 {
-                    new PlayerName<CBasePlayerController>(player).Set(Names[player.SteamID] = result.Name);
+                    new SchemaString<CBasePlayerController>(player, "m_iszPlayerName").Set(Names[player.SteamID] = result.Name);
                 });
             }
             else

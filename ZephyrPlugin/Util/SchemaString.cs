@@ -1,14 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
 using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
 
-namespace ZephyrPlugin.Module.Whitelist.Util;
+namespace ZephyrPlugin.Util;
 
-public class PlayerName<T> : NativeObject where T : NativeObject
+public class SchemaString<TSchemaClass> : NativeObject where TSchemaClass : NativeObject
 {
-    internal PlayerName(T instance) : base(Schema.GetSchemaValue<nint>(instance.Handle, typeof(T).Name!, "m_iszPlayerName"))
+    internal SchemaString(TSchemaClass instance, string member) : base(Schema.GetSchemaValue<nint>(instance.Handle, typeof(TSchemaClass).Name!, member))
     { }
 
     internal unsafe void Set(string str)
