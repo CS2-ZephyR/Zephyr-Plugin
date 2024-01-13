@@ -137,17 +137,36 @@ public static class SkinUtil
 
 		if (isKnife && !Module.PlayerKnife.ContainsKey(player.SteamID) || isKnife && Module.PlayerKnife[player.SteamID] == "weapon_knife") return;
 
-		if (!Module.PlayerSkin.TryGetValue(player.SteamID, out var skin)) return;
-		if (!skin.TryGetValue(weapon.AttributeManager.Item.ItemDefinitionIndex, out var paint)) return;
+		if (!Module.PlayerSkin.TryGetValue(player.SteamID, out var skinDict)) return;
+		if (!skinDict.TryGetValue(weapon.AttributeManager.Item.ItemDefinitionIndex, out var skin)) return;
 
-		if (isKnife) weapon.AttributeManager.Item.EntityQuality = 3;
 		weapon.AttributeManager.Item.ItemID = 16384;
 		weapon.AttributeManager.Item.ItemIDLow = 16384;
 		weapon.AttributeManager.Item.ItemIDHigh = 0;
-		weapon.FallbackPaintKit = paint;
-		weapon.FallbackSeed = 0;
-		weapon.FallbackWear = 0.00001F;
-		weapon.FallbackStatTrak = isKnife ? -1 : 1234;
+		weapon.FallbackPaintKit = skin.Paint;
+		weapon.FallbackSeed = skin.Seed;
+		weapon.FallbackWear = (float)skin.Wear;
+
+		if (isKnife)
+		{
+			weapon.AttributeManager.Item.EntityQuality = 3;
+		}
+
+		if (skin.StatTrak)
+		{
+			weapon.AttributeManager.Item.EntityQuality = 9;
+			weapon.FallbackStatTrak = 0;
+		}
+
+		if (skin.Name != null)
+		{
+			new SchemaString<CEconItemView>(weapon.AttributeManager.Item, "m_szCustomName").Set(skin.Name);
+		}
+
+		var node = weapon.CBodyComponent?.SceneNode;
+		if (isKnife || node == null) return;
+		var getSkeletonInstance = VirtualFunction.Create<nint, nint>(node.Handle, 8);
+		new CSkeletonInstance(getSkeletonInstance(node.Handle)).ModelState.MeshGroupMask = 2;
 	}
 
 	public static void GiveKnife(CCSPlayerController player)
@@ -173,6 +192,15 @@ public static class SkinUtil
 		return weapons != null && weapons.Where(weapon => weapon.IsValid && weapon.Value != null && weapon.Value.IsValid).Any(weapon => weapon.Value.DesignerName.Contains("knife") || weapon.Value.DesignerName.Contains("bayonet"));
 	}
 
+	public static void RefreshSkins(CCSPlayerController player)
+	{
+		if (!player.IsValid() || !player!.PawnIsAlive) return;
+
+		_plugin.AddTimer(0.18f, () => NativeAPI.IssueClientCommand((int)player.Index - 1, "slot3"));
+		_plugin.AddTimer(0.25f, () => NativeAPI.IssueClientCommand((int)player.Index - 1, "slot2"));
+		_plugin.AddTimer(0.38f, () => NativeAPI.IssueClientCommand((int)player.Index - 1, "slot1"));
+	}
+
 	public static void RefreshWeapons(CCSPlayerController player)
 	{
 		if (!player.IsValid() || !player.PawnIsAlive || player.PlayerPawn.Value?.WeaponServices == null) return;
@@ -194,5 +222,7 @@ public static class SkinUtil
 				player.GiveNamedItem(weaponIndex);
 			}
 		}
+
+		RefreshSkins(player);
 	}
 }

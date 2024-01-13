@@ -1,12 +1,13 @@
 ﻿using MongoDB.Driver;
+using ZephyrPlugin.Module.CustomSkin.Data;
 
 namespace ZephyrPlugin.Module.CustomSkin.Util;
 
 public static class SkinDatabase
 {
-	private static IMongoCollection<Data.PlayerSkin> _collection;
+	private static IMongoCollection<PlayerSkin> _collection;
 
-	public static void InjectCollection(IMongoCollection<Data.PlayerSkin> collection)
+	public static void InjectCollection(IMongoCollection<PlayerSkin> collection)
 	{
 		_collection = collection;
 	}
@@ -15,7 +16,7 @@ public static class SkinDatabase
 	{
 		if (!Module.PlayerSkin.TryGetValue(steamId, out _))
 		{
-			Module.PlayerSkin[steamId] = new Dictionary<int, int>();
+			Module.PlayerSkin[steamId] = new Dictionary<int, SkinDetail>();
 		}
 
 		var result = await (await _collection.FindAsync(x => x.SteamId == steamId)).SingleOrDefaultAsync();
