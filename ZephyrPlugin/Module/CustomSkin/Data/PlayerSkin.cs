@@ -11,8 +11,14 @@ public class PlayerSkin
 
     public ulong SteamId;
     public string Knife;
-    public Dictionary<int, int> Skin;
+    public Dictionary<int, SkinDetail> Skin;
+}
 
-    // ReSharper disable once InconsistentNaming
-    public string _class;
+public class SkinDetail
+{
+    public int Paint;
+    public double Wear;
+    public int Seed;
+    public bool StatTrak;
+    public string Name;
 }
