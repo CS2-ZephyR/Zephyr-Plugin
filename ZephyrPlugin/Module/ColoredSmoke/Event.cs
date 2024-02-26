@@ -18,9 +18,9 @@ public partial class Module
         if (!_isColoredSmoke) return;
 
         if (entity.DesignerName != "smokegrenade_projectile") return;
-
         var projectile = new CSmokeGrenadeProjectile(entity.Handle);
-        if (projectile.SmokeColor.Handle == IntPtr.Zero || projectile.Thrower.Value == null) return;
+
+        if (projectile.Thrower.Value == null) return;
 
         Server.NextFrame(() =>
         {

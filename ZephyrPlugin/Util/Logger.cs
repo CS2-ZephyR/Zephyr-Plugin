@@ -2,6 +2,8 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Utils;
 
 namespace ZephyrPlugin.Util;
 
@@ -12,6 +14,12 @@ public class Logger
     public Logger(string moduleName)
     {
         _moduleName = moduleName;
+    }
+
+    public void All(string message)
+    {
+        Info(message);
+        ChatAll(message);
     }
 
     public void Info(string message)
@@ -84,5 +92,15 @@ public class Logger
     public static void Chat(CCSPlayerController player, string message)
     {
         player.PrintToChat($"{{White}}[{{Gold}}Team ZephyR{{White}}] {message}".ReplaceColorTags());
+    }
+
+    public static void Center(CCSPlayerController player, string message, bool red = false)
+    {
+        VirtualFunctions.ClientPrint(player.Handle, red ? HudDestination.Alert : HudDestination.Center, message, 0, 0, 0, 0);
+    }
+    
+    public static void CenterAll(string message, bool red = false)
+    {
+        VirtualFunctions.ClientPrintAll(red ? HudDestination.Alert : HudDestination.Center, message, 0, 0, 0, 0);
     }
 }

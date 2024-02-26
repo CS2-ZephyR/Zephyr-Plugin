@@ -18,7 +18,7 @@ public class MongoConfig
     public int Port { get; set; } = 27017;
 
     [JsonPropertyName("Username")]
-    public string Username { get; set; } = "root";
+    public string Username { get; set; } = "";
 
     [JsonPropertyName("Password")]
     public string Password { get; set; } = "";

@@ -1,9 +1,10 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace ZephyrPlugin.Module.Whitelist.Data;
+namespace ZephyrPlugin.Module.UserManager.Data;
 
-public class Whitelist
+[BsonIgnoreExtraElements]
+public class User
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

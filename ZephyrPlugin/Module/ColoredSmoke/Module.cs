@@ -2,5 +2,6 @@
 
 public partial class Module : ZephyrModule
 {
-    public Module() : base("ColoredSmoke") {}
+    public Module() : base("ColoredSmoke")
+    { }
 }

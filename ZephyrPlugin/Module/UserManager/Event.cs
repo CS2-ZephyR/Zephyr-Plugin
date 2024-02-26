@@ -1,14 +1,13 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Timers;
 using MongoDB.Driver;
 using ZephyrPlugin.Util;
 
-namespace ZephyrPlugin.Module.Whitelist;
+namespace ZephyrPlugin.Module.UserManager;
 
 public partial class Module
 {
-    private static readonly Dictionary<ulong, string> Names = new();
-
     public override void RegisterEvents()
     {
         Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
@@ -31,26 +30,39 @@ public partial class Module
 
             if (result != null)
             {
+                Names[steamId] = result.Name;
+
                 Server.NextFrame(() =>
                 {
-                    new SchemaString<CBasePlayerController>(player, "m_iszPlayerName").Set(Names[player.SteamID] = result.Name);
+                    player.Clan = "ZephyR";
+                    Plugin.AddTimer(0.2f, () =>
+                    {
+                        Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
+                    });
+                    
+                    Logger.All($"{{Green}}{result.Name}{{White}}님이 {{Lime}}접속{{White}}하셨습니다.");
                 });
             }
             else
             {
-                if (isAdmin) return;
-
                 Server.NextFrame(() =>
                 {
-                    Server.ExecuteCommand($"kickid {player.UserId}");
+                    if (!isAdmin)
+                    {
+                        Server.ExecuteCommand($"kickid {player.UserId}");
+                    }
 
-                    var message = $"허가되지 않은 유저 {{Green}}{player.PlayerName}{{Grey}}({steamId})를 퇴장시켰습니다.";
-
-                    Logger.Warn(message);
-                    Logger.ChatAll(message);
+                    Logger.All($"허가되지 않은 유저 {{Green}}{player.PlayerName}{{White}}를 {{Red}}퇴장{{White}}시켰습니다.");
                 });
             }
         });
+
+        return HookResult.Continue;
+    }
+
+    private HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
+    {
+        info.DontBroadcast = true;
 
         return HookResult.Continue;
     }
@@ -59,22 +71,14 @@ public partial class Module
     {
         info.DontBroadcast = true;
 
-        return HookResult.Continue;
-    }
-
-    private HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
-    {
         var player = @event.Userid;
-
-        info.DontBroadcast = true;
 
         if (!player.IsValid()) return HookResult.Continue;
 
-        var existsName = Names.TryGetValue(player.SteamID, out var name);
-        var message = $"{{Green}}{(existsName ? name : player.PlayerName)}{{White}}님이 {(@event.Team == 2 ? "{Red}테러리스트" : "{Blue}대테러리스트")}{{White}}에 들어왔습니다.";
+        var steamId = player.SteamID;
 
-        Logger.Info(message);
-        Logger.ChatAll(message);
+        Names.TryGetValue(steamId, out var name);
+        Logger.All($"{{Green}}{name ?? player.PlayerName}{{White}}님이 {{LightRed}}퇴장{{White}}하셨습니다.");
 
         return HookResult.Continue;
     }

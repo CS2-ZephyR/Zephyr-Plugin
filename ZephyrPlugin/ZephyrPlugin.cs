@@ -1,5 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Admin;
 using ZephyrPlugin.Module;
 using ZephyrPlugin.Util;
 
@@ -25,6 +24,12 @@ public class ZephyrPlugin : BasePlugin, IPluginConfig<Config>
             zephyrModule.OnLoad();
             zephyrModule.RegisterCommands();
             zephyrModule.RegisterEvents();
+            
+            RegisterListener<Listeners.OnMapStart>((_) =>
+            {
+                zephyrModule.RegisterTimers();
+            });
+            
             _logger.Info($"{zephyrModule.ModuleName} is enabled.");
         }
     }
