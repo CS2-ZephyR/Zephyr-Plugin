@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Memory;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.WarmupWeapon;
@@ -25,8 +26,9 @@ public partial class Module
         if (gameRules is { WarmupPeriod: false }) return HookResult.Continue;
 
         if (player.InGameMoneyServices != null) player.InGameMoneyServices.Account = 0;
+        
         player.GiveNamedItem("weapon_deagle");
-
+        
         return HookResult.Continue;
     }
 

@@ -10,9 +10,6 @@ public class Match
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id;
 
-    [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
-    public DateTime Date;
-    
     public bool End;
 
     public string Map;

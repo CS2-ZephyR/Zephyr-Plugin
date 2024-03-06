@@ -20,7 +20,7 @@ public partial class Module : ZephyrModule
 
         OnMapStart(string.Empty);
         
-        // Server.ExecuteCommand($"map {Match.Map}");
+        Server.ExecuteCommand($"map {Match.Map}");
     }
 
     private void ChangeTeamName()

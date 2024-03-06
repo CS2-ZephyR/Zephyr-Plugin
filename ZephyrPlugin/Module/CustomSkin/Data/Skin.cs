@@ -12,8 +12,15 @@ public class Skin
 
     public string Knife;
     public ushort Glove;
-    public Dictionary<int, SkinDetail> Details;
+    public AgentDetail Agent;
+    public Dictionary<int, SkinDetail> Detail;
 
+    public class AgentDetail
+    {
+        public string Ct;
+        public string T;
+    }
+    
     public class SkinDetail
     {
         public int Paint;

@@ -1,7 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
-using CounterStrikeSharp.API.Modules.Utils;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.KnifeRound;
@@ -17,7 +16,6 @@ public partial class Module
         Plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
         Plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
         Plugin.RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
-        
     }
 
     private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)

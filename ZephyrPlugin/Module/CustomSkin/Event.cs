@@ -1,5 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.CustomSkin;
@@ -10,25 +12,19 @@ public partial class Module
 	{
 		Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnClientFullConnect);
 		Plugin.RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
-		Plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart, HookMode.Pre);
 		
-		Plugin.RegisterListener<Listeners.OnMapStart>(OnMapStart);
-		Plugin.RegisterListener<Listeners.OnEntitySpawned>(OnEntityCreated);
-		Plugin.RegisterListener<Listeners.OnTick>(OnTick);
+		Plugin.RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
+		
+		VirtualFunctions.GiveNamedItemFunc.Hook(OnGiveNamedItemPost, HookMode.Post);
 	}
-
+	
 	private HookResult OnClientFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
 	{
 		var player = @event.Userid;
 
 		if (!player.IsValid()) return HookResult.Continue;
-
-		var steamId = player.SteamID;
-
-		Task.Run(async () =>
-		{
-			await GetSkinFromDatabase(steamId);
-		});
+		
+		GetSkinData(player);
 
 		return HookResult.Continue;
 	}
@@ -41,11 +37,7 @@ public partial class Module
 		var pawn = player.PlayerPawn.Value;
 		if (pawn == null || !pawn.IsValid) return HookResult.Continue;
 
-		if (!PlayerHasKnife(player))
-		{
-			GiveKnifeToPlayer(player);
-		}
-
+		GivePlayerAgent(player);
 		Server.NextFrame(() =>
 		{
 			RefreshGloves(player);
@@ -53,106 +45,33 @@ public partial class Module
 
 		return HookResult.Continue;
 	}
-
-	private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
+	
+	private HookResult OnGiveNamedItemPost(DynamicHook hook)
 	{
-		NativeAPI.IssueServerCommand("mp_t_default_melee \"\"");
-		NativeAPI.IssueServerCommand("mp_ct_default_melee \"\"");
-		NativeAPI.IssueServerCommand("mp_equipment_reset_rounds 0");
+		var itemServices = hook.GetParam<CCSPlayer_ItemServices>(0);
+		var weapon = hook.GetReturn<CBasePlayerWeapon>(0);
+		if (!weapon.DesignerName.Contains("weapon")) return HookResult.Continue;
+		
+		var player = GetPlayerFromItemServices(itemServices);
+		if (player != null) GivePlayerWeaponSkin(player, weapon);
 
 		return HookResult.Continue;
 	}
 
-	private void OnMapStart(string mapName)
+	private void OnEntitySpawned(CEntityInstance entity)
 	{
-		Plugin.AddTimer(2.0f, () =>
-		{
-			NativeAPI.IssueServerCommand("mp_t_default_melee \"\"");
-			NativeAPI.IssueServerCommand("mp_ct_default_melee \"\"");
-			NativeAPI.IssueServerCommand("mp_equipment_reset_rounds 0");
-		});
-	}
-	
-	private void OnEntityCreated(CEntityInstance entity)
-	{
-		if (entity == null || !entity.IsValid || string.IsNullOrEmpty(entity.DesignerName)) return;
+		var designerName = entity.DesignerName;
+		if (!designerName.Contains("weapon")) return;
 		
-		if (!WeaponList.ContainsKey(entity.DesignerName)) return;
-		
-		var weapon = new CBasePlayerWeapon(entity.Handle);
-		var isKnife = entity.DesignerName.Contains("knife") || entity.DesignerName.Contains("bayonet");
-
 		Server.NextFrame(() =>
 		{
-			if (!weapon.IsValid || weapon.OwnerEntity.Value == null || weapon.OwnerEntity.Index <= 0) return;
-			
-			var weaponOwner = (int)weapon.OwnerEntity.Index;
-			
-			var pawn = Utilities.GetEntityFromIndex<CCSPlayerPawn>(weaponOwner);
-			if (!pawn.IsValid) return;
+			var weapon = new CBasePlayerWeapon(entity.Handle);
+			if (!weapon.IsValid || weapon.OwnerEntity.Value == null) return;
 
-			var player = Utilities.GetPlayerFromIndex((int)pawn.Controller.Index);
+			var player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Value.Index);
 			if (!player.IsValid()) return;
 
-			ChangeWeaponAttributes(weapon, player, isKnife);
+			GivePlayerWeaponSkin(player, weapon);
 		});
-	}
-	
-	private void OnTick()
-	{
-		try
-		{
-			foreach (var player in Utilities.GetPlayers().Where(x => x.IsValid()))
-			{
-				if (player.PlayerPawn.Value != null &&
-				    (player.PlayerPawn.IsValid != true || player.PlayerPawn.Value.IsValid != true)) continue;
-
-				var viewModels = GetPlayerViewModels(player);
-				if (viewModels == null || viewModels.Length == 0) continue;
-
-				var viewModel = viewModels[0];
-				if (viewModel == null || viewModel.Value == null || viewModel.Value.Weapon.Value == null) continue;
-				if (viewModel.Value.VMName.Contains("knife")) continue;
-
-				var weapon = viewModel.Value.Weapon.Value;
-				if (weapon == null || !weapon.IsValid || weapon.FallbackPaintKit == 0) continue;
-
-				var sceneNode = viewModel.Value.CBodyComponent?.SceneNode;
-				if (sceneNode == null) continue;
-
-				var skeleton = GetSkeletonInstance(sceneNode);
-				if (skeleton == null) continue;
-
-				var skeletonChange = false;
-
-				int[] newPaints =
-					{ 1171, 1170, 1169, 1164, 1162, 1161, 1159, 1175, 1174, 1167, 1165, 1168, 1163, 1160, 1166, 1173 };
-				if (newPaints.Contains(weapon.FallbackPaintKit))
-				{
-					if (skeleton.ModelState.MeshGroupMask != 1)
-					{
-						skeleton.ModelState.MeshGroupMask = 1;
-						skeletonChange = true;
-					}
-				}
-				else
-				{
-					if (skeleton.ModelState.MeshGroupMask != 2)
-					{
-						skeleton.ModelState.MeshGroupMask = 2;
-						skeletonChange = true;
-					}
-				}
-
-				if (skeletonChange)
-				{
-					Utilities.SetStateChanged(viewModel.Value, "CBaseEntity", "m_CBodyComponent");
-				}
-			}
-		}
-		catch (Exception)
-		{
-			// ignored
-		}
 	}
 }
