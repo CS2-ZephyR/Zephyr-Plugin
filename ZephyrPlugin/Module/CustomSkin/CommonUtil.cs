@@ -79,10 +79,10 @@ public partial class Module
 		weapon.FallbackPaintKit = weaponInfo.Paint;
 		weapon.FallbackSeed = weaponInfo.Seed;
 		weapon.FallbackWear = weaponInfo.Wear;
+		if (!string.IsNullOrEmpty(weaponInfo.Name)) new SchemaString<CEconItemView>(weapon.AttributeManager.Item, "m_szCustomName").Set(weaponInfo.Name);
 		CAttributeList_SetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weapon.FallbackPaintKit);
 
-		if (weapon.FallbackPaintKit == 0)
-			return;
+		if (weapon.FallbackPaintKit == 0) return;
 
 		if (!isKnife)
 		{
