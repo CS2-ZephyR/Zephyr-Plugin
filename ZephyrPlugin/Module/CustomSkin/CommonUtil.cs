@@ -45,9 +45,9 @@ public partial class Module
     private void GivePlayerWeaponSkin(CCSPlayerController player, CBasePlayerWeapon weapon)
 	{
 		if (!player.IsValid() || !weapon.IsValid) return;
-		if (!_playerDetails.ContainsKey(player.SteamID)) return;
+		if (!_playerDetails.TryGetValue(player.SteamID, out var playerDetail)) return;
 
-		int[] newPaints = { 1171, 1170, 1169, 1164, 1162, 1161, 1159, 1175, 1174, 1167, 1165, 1168, 1163, 1160, 1166, 1173 };
+		int[] newPaints = [1171, 1170, 1169, 1164, 1162, 1161, 1159, 1175, 1174, 1167, 1165, 1168, 1163, 1160, 1166, 1173];
 		
 		var isKnife = weapon.DesignerName.Contains("knife") || weapon.DesignerName.Contains("bayonet");
 		switch (isKnife)
@@ -72,7 +72,7 @@ public partial class Module
 			}
 		}
 
-		if (!_playerDetails[player.SteamID].TryGetValue(weapon.AttributeManager.Item.ItemDefinitionIndex, out var detail) || detail.Paint == 0) return;
+		if (!playerDetail.TryGetValue(weapon.AttributeManager.Item.ItemDefinitionIndex, out var detail) || detail.Paint == 0) return;
 
 		weapon.AttributeManager.Item.ItemID = 16384;
 		weapon.AttributeManager.Item.ItemIDLow = 16384;
@@ -105,20 +105,20 @@ public partial class Module
 		{
 			if (!player.IsValid) return;
 			if (!_playerGlove.TryGetValue(player.SteamID, out var gloveInfo) || gloveInfo == 0) return;
+			if (!_playerDetails.TryGetValue(player.SteamID, out var playerDetail) ||
+			    !playerDetail.TryGetValue(gloveInfo, out var gloveDetail)) return;
 			
 			var pawn2 = player.PlayerPawn.Value;
 			if (pawn2 == null || !pawn2.IsValid || pawn2.LifeState != (byte)LifeState_t.LIFE_ALIVE) return;
-
-			var weaponInfo = _playerDetails[player.SteamID][gloveInfo];
 
 			var item = pawn2.EconGloves;
 			item.ItemDefinitionIndex = (ushort) gloveInfo;
 			item.ItemIDLow = 16384 & 0xFFFFFFFF;
 			item.ItemIDHigh = 16384;
 
-			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weaponInfo.Paint);
-			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture seed", weaponInfo.Seed);
-			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture wear", weaponInfo.Wear);
+			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture prefab", gloveDetail.Paint);
+			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture seed", gloveDetail.Seed);
+			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture wear", gloveDetail.Wear);
 
 			item.Initialized = true;
 
@@ -161,11 +161,9 @@ public partial class Module
 
 	private void GivePlayerAgent(CCSPlayerController player)
 	{
-		if (!_playerAgent.ContainsKey(player.SteamID)) return;
-		
-		var model = player.TeamNum == 3 ? _playerAgent[player.SteamID][CsTeam.CounterTerrorist] : _playerAgent[player.SteamID][CsTeam.Terrorist];
-		if (string.IsNullOrEmpty(model)) return;
+		if (!_playerAgent.TryGetValue(player.SteamID, out var playerAgent) || !playerAgent.TryGetValue(player.Team, out var model)) return;
 		if (player.PlayerPawn.Value == null) return;
+		if (string.IsNullOrEmpty(model)) return;
 		
 		Server.NextFrame(() =>
 		{

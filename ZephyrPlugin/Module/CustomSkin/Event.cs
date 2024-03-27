@@ -53,35 +53,43 @@ public partial class Module
 		
 		Server.NextFrame(() =>
 		{
-			var weapon = new CBasePlayerWeapon(entity.Handle);
-			if (!weapon.IsValid || weapon.OwnerEntity.Value == null) return;
-
-			SteamID steamId = null;
-			CCSPlayerController player;
-			
-			if (weapon.OriginalOwnerXuidLow > 0)
+			try
 			{
-				steamId = new SteamID(weapon.OriginalOwnerXuidLow);
-			}
-			
-			if (steamId != null && steamId.IsValid())
-			{
-				player = Utilities.GetPlayers().FirstOrDefault(p => p.IsValid() && p.SteamID == steamId.SteamId64);
+				var weapon = new CBasePlayerWeapon(entity.Handle);
+				if (!weapon.IsValid || weapon.OwnerEntity.Value == null) return;
 
-				if (player == null) {
-					player = Utilities.GetPlayerFromSteamId(weapon.OriginalOwnerXuidLow);
+				SteamID steamId = null;
+				CCSPlayerController player;
+
+				if (weapon.OriginalOwnerXuidLow > 0)
+				{
+					steamId = new SteamID(weapon.OriginalOwnerXuidLow);
 				}
+
+				if (steamId != null && steamId.IsValid())
+				{
+					player = Utilities.GetPlayers().FirstOrDefault(p => p.IsValid() && p.SteamID == steamId.SteamId64);
+
+					if (player == null)
+					{
+						player = Utilities.GetPlayerFromSteamId(weapon.OriginalOwnerXuidLow);
+					}
+				}
+				else
+				{
+					var gun = weapon.As<CCSWeaponBaseGun>();
+					player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Index);
+				}
+
+				if (string.IsNullOrEmpty(player?.PlayerName)) return;
+				if (!player.IsValid()) return;
+
+				GivePlayerWeaponSkin(player, weapon);
 			}
-			else
+			catch (Exception)
 			{
-				var gun = weapon.As<CCSWeaponBaseGun>();
-				player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Index);
+				// ignored
 			}
-
-			if (string.IsNullOrEmpty(player?.PlayerName)) return;
-			if (!player.IsValid()) return;
-
-			GivePlayerWeaponSkin(player, weapon);
 		});
 		
 	}
