@@ -1,33 +1,25 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
-using ZephyrPlugin.Util;
+﻿using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module;
 
-public abstract class ZephyrModule
+public abstract class ZephyrModule(string moduleName)
 {
-    public readonly string ModuleName;
+    public readonly string ModuleName = moduleName;
 
-    protected readonly Logger Logger;
+    protected readonly Logger Logger = new(moduleName);
 
     protected ZephyrPlugin Plugin;
 
-    public static readonly List<ZephyrModule> Modules = new()
-    {
+    public static readonly List<ZephyrModule> Modules = [
         new MatchManager.Module(),
         new UserManager.Module(),
         new WarmupWeapon.Module(),
         new KnifeRound.Module(),
         new ColoredSmoke.Module(),
         new C4Timer.Module(),
-        new CustomSkin.Module(),
-    };
-
-    protected ZephyrModule(string moduleName)
-    {
-        ModuleName = moduleName;
-        Logger = new Logger(moduleName);
-    }
+        new DamageInfo.Module(),
+        new CustomSkin.Module()
+    ];
 
     public void InjectPlugin(ZephyrPlugin plugin)
     {

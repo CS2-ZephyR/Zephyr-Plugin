@@ -1,14 +1,14 @@
-using System.Collections.Concurrent;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
 using MongoDB.Driver;
+using ZephyrPlugin.Module.CustomSkin.Data;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.CustomSkin;
 
-public partial class Module : ZephyrModule
+public partial class Module() : ZephyrModule("CustomSkin")
 {
 	private IMongoCollection<Skin> _collection;
 	
@@ -20,10 +20,7 @@ public partial class Module : ZephyrModule
 
 	private readonly MemoryFunctionVoid<nint, string, float> _vFunc1 = new(GameData.GetSignature("CAttributeList_SetOrAddAttributeValueByName"));
 	private readonly MemoryFunctionVoid<CBaseModelEntity, string, long> _vFunc2 = new(GameData.GetSignature("CBaseModelEntity_SetBodygroup"));
-	
-	public Module() : base("CustomSkin")
-	{ }
-	
+
 	public override void OnLoad()
 	{
 		_collection = Database.GetCollection<Skin>();

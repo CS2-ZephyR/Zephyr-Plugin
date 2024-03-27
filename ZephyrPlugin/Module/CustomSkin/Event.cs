@@ -1,8 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.CustomSkin;
@@ -77,7 +75,7 @@ public partial class Module
 				}
 				else
 				{
-					var gun = weapon.As<CCSWeaponBaseGun>();
+					weapon.As<CCSWeaponBaseGun>();
 					player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Index);
 				}
 

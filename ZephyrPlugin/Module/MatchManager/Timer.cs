@@ -1,7 +1,5 @@
 ﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
-using MongoDB.Driver;
 using ZephyrPlugin.Util;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
@@ -24,7 +22,7 @@ public partial class Module
 
     private void RunTimer1()
     {
-        _timer1 = new Timer(1.0f, () =>
+        _timer1 = Plugin.AddTimer(1.0f, () =>
         {
             var players = Utilities.GetPlayers().Where(x => x.IsValid()).ToList();
             var playerCount = players.Count(x => x.TeamNum is 2 or 3);
@@ -42,7 +40,7 @@ public partial class Module
         var count = 5;
         var flag = false;
 
-        _timer2 = new Timer(1.0f, () =>
+        _timer2 = Plugin.AddTimer(1.0f, () =>
         {
             if (_timer1 != null) return;
 

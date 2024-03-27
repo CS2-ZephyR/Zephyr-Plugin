@@ -1,6 +1,8 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
+namespace ZephyrPlugin.Module.CustomSkin.Data;
+
 [BsonIgnoreExtraElements]
 public class Skin
 {

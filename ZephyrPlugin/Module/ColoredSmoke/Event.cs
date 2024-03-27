@@ -1,5 +1,4 @@
-﻿using System;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
 namespace ZephyrPlugin.Module.ColoredSmoke;

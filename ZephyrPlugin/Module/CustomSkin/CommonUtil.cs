@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using MongoDB.Driver;
+using ZephyrPlugin.Module.CustomSkin.Data;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.CustomSkin;
@@ -97,7 +98,7 @@ public partial class Module
 		var pawn = player.PlayerPawn.Value;
 		if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE) return;
 
-		var model = pawn.CBodyComponent?.SceneNode?.GetSkeletonInstance()?.ModelState.ModelName ?? string.Empty;
+		var model = pawn.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName ?? string.Empty;
 		if (!string.IsNullOrEmpty(model))
 		{
 			pawn.SetModel("characters/models/tm_jumpsuit/tm_jumpsuit_varianta.vmdl");

@@ -5,14 +5,11 @@ using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.MatchManager;
 
-public partial class Module : ZephyrModule
+public partial class Module() : ZephyrModule("MatchManager")
 {
     private IMongoCollection<Match> _collection;
 
     public static Match Match;
-
-    public Module() : base("MatchManager")
-    { }
 
     public override void OnLoad()
     {

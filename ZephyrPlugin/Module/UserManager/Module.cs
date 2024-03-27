@@ -4,14 +4,11 @@ using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.UserManager;
 
-public partial class Module : ZephyrModule
+public partial class Module() : ZephyrModule("UserManager")
 {
     private IMongoCollection<User> _collection;
     
     public static readonly Dictionary<ulong, string> Names = new();
-
-    public Module() : base("UserManager")
-    { }
 
     public override void OnLoad()
     {
