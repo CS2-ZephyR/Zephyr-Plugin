@@ -26,7 +26,7 @@ public abstract class ZephyrModule(string moduleName)
         Plugin = plugin;
     }
 
-    public virtual void OnLoad()
+    public virtual void OnLoad(bool hotReload)
     { }
 
     public virtual void RegisterCommands()

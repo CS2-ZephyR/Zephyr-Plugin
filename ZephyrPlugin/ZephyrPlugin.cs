@@ -21,7 +21,7 @@ public class ZephyrPlugin : BasePlugin, IPluginConfig<Config>
         foreach (var zephyrModule in ZephyrModule.Modules)
         {
             zephyrModule.InjectPlugin(this);
-            zephyrModule.OnLoad();
+            zephyrModule.OnLoad(hotReload);
             zephyrModule.RegisterCommands();
             zephyrModule.RegisterEvents();
             

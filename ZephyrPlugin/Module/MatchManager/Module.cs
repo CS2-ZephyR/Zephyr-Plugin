@@ -11,7 +11,7 @@ public partial class Module() : ZephyrModule("MatchManager")
 
     public static Match Match;
 
-    public override void OnLoad()
+    public override void OnLoad(bool hotReload)
     {
         _collection = Database.GetCollection<Match>();
 

@@ -10,7 +10,7 @@ public partial class Module() : ZephyrModule("UserManager")
     
     public static readonly Dictionary<ulong, string> Names = new();
 
-    public override void OnLoad()
+    public override void OnLoad(bool hotReload)
     {
         _collection = Database.GetCollection<User>();
     }

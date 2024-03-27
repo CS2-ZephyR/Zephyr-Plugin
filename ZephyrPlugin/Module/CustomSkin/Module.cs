@@ -21,10 +21,12 @@ public partial class Module() : ZephyrModule("CustomSkin")
 	private readonly MemoryFunctionVoid<nint, string, float> _vFunc1 = new(GameData.GetSignature("CAttributeList_SetOrAddAttributeValueByName"));
 	private readonly MemoryFunctionVoid<CBaseModelEntity, string, long> _vFunc2 = new(GameData.GetSignature("CBaseModelEntity_SetBodygroup"));
 
-	public override void OnLoad()
+	public override void OnLoad(bool hotReload)
 	{
 		_collection = Database.GetCollection<Skin>();
 
+		if (!hotReload) return;
+		
 		foreach (var player in Utilities.GetPlayers().Where(player => !player.IsValid()))
 		{
 			GetSkinData(player);
