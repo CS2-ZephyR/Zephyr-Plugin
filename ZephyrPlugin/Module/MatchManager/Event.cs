@@ -19,7 +19,21 @@ public partial class Module
 
     private void OnMapStart(string map)
     {
-        Match = _collection.Find(x => !x.End).Single();
+        Match = _collection.Find(x => !x.End).SingleOrDefault();
+
+        if (Match == null)
+        {
+            Plugin.AddTimer(5f, () =>
+            {
+                Server.NextFrame(() =>
+                {
+                    Server.ExecuteCommand("quit");
+                });
+            }, TimerFlags.STOP_ON_MAPCHANGE);
+            
+            throw new Exception("매치가 존재하지 않습니다. 5초 후 인스턴스가 종료됩니다.");
+        }
+        
         Logger.All($"매치 ID: {{Green}}{Match.Id}");
         
         ChangeTeamName();
@@ -27,7 +41,7 @@ public partial class Module
     
     private HookResult OnIntermission(EventCsIntermission @event, GameEventInfo info)
     {
-        var count = 16;
+        var count = 21;
 
         Task.Run(async () =>
         {
@@ -38,15 +52,9 @@ public partial class Module
         
         Plugin.AddTimer(1.0f, () =>
         {
-            Logger.All($"{--count}초 후 서버가 종료됩니다.");
+            Logger.All($"{{Lime}}{--count}초 {{Default}}후 서버가 종료됩니다.");
 
             if (count >= 0) return;
-            
-            var players = Utilities.GetPlayers().Where(x => x.IsValid()).ToList();
-            foreach (var player in players)
-            {
-                Server.ExecuteCommand($"kickid {player.UserId}");
-            }
             
             Server.ExecuteCommand("quit");
         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
