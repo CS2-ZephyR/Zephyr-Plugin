@@ -19,8 +19,11 @@ public partial class Module : ZephyrModule
         _collection = Database.GetCollection<Match>();
 
         OnMapStart(string.Empty);
+
+        var command = Match.Map.StartsWith("workshop:") ? "host_workshop_map" : "map";
+        var map = Match.Map.StartsWith("workshop:") ? Match.Map[9..] : Match.Map;
         
-        Server.ExecuteCommand($"map {Match.Map}");
+        Server.ExecuteCommand($"{command} {map}");
     }
 
     private void ChangeTeamName()

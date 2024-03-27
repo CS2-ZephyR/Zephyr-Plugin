@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <ImplicitUsings>true</ImplicitUsings>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.174" />
+      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.202" />
       <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
     </ItemGroup>
 
