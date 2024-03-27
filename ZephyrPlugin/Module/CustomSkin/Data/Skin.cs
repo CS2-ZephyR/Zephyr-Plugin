@@ -11,7 +11,8 @@ public class Skin
     public ulong SteamId;
 
     public string Knife;
-    public ushort Glove;
+    public int Glove;
+    public int Music;
     public AgentDetail Agent;
     public Dictionary<int, SkinDetail> Detail;
 

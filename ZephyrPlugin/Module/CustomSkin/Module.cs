@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -12,12 +13,13 @@ public partial class Module : ZephyrModule
 	private IMongoCollection<Skin> _collection;
 	
 	private readonly Dictionary<ulong, string> _playerKnife = new();
-	private readonly Dictionary<ulong, ushort> _playerGlove = new();
+	private readonly Dictionary<ulong, int> _playerGlove = new();
+	private readonly Dictionary<ulong, int> _playerMusic = new();
 	private readonly Dictionary<ulong, Dictionary<CsTeam, string>> _playerAgent = new();
 	private readonly Dictionary<ulong, Dictionary<int, Skin.SkinDetail>> _playerDetails = new();
-	
-	private MemoryFunctionVoid<nint, string, float> CAttributeList_SetOrAddAttributeValueByName = new(GameData.GetSignature("CAttributeList_SetOrAddAttributeValueByName"));
-	private MemoryFunctionVoid<CBaseModelEntity, string, ulong> CBaseModelEntity_SetBodygroup = new(GameData.GetSignature("CBaseModelEntity_SetBodygroup"));
+
+	private readonly MemoryFunctionVoid<nint, string, float> _vFunc1 = new(GameData.GetSignature("CAttributeList_SetOrAddAttributeValueByName"));
+	private readonly MemoryFunctionVoid<CBaseModelEntity, string, long> _vFunc2 = new(GameData.GetSignature("CBaseModelEntity_SetBodygroup"));
 	
 	public Module() : base("CustomSkin")
 	{ }
@@ -25,9 +27,14 @@ public partial class Module : ZephyrModule
 	public override void OnLoad()
 	{
 		_collection = Database.GetCollection<Skin>();
+
+		foreach (var player in Utilities.GetPlayers().Where(player => !player.IsValid()))
+		{
+			GetSkinData(player);
+		}
 	}
 
-	public static Dictionary<int, string> WeaponDefindex { get; } = new()
+	private static Dictionary<int, string> WeaponIndex { get; } = new()
 	{
 		{ 1, "weapon_deagle" },
 		{ 2, "weapon_elite" },

@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using ZephyrPlugin.Util;
@@ -14,8 +15,6 @@ public partial class Module
 		Plugin.RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
 		
 		Plugin.RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
-		
-		VirtualFunctions.GiveNamedItemFunc.Hook(OnGiveNamedItemPost, HookMode.Post);
 	}
 	
 	private HookResult OnClientFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
@@ -37,6 +36,7 @@ public partial class Module
 		var pawn = player.PlayerPawn.Value;
 		if (pawn == null || !pawn.IsValid) return HookResult.Continue;
 
+		GiveMusicKit(player);
 		GivePlayerAgent(player);
 		Server.NextFrame(() =>
 		{
@@ -46,18 +46,6 @@ public partial class Module
 		return HookResult.Continue;
 	}
 	
-	private HookResult OnGiveNamedItemPost(DynamicHook hook)
-	{
-		var itemServices = hook.GetParam<CCSPlayer_ItemServices>(0);
-		var weapon = hook.GetReturn<CBasePlayerWeapon>(0);
-		if (!weapon.DesignerName.Contains("weapon")) return HookResult.Continue;
-		
-		var player = GetPlayerFromItemServices(itemServices);
-		if (player != null) GivePlayerWeaponSkin(player, weapon);
-
-		return HookResult.Continue;
-	}
-
 	private void OnEntitySpawned(CEntityInstance entity)
 	{
 		var designerName = entity.DesignerName;
@@ -68,10 +56,33 @@ public partial class Module
 			var weapon = new CBasePlayerWeapon(entity.Handle);
 			if (!weapon.IsValid || weapon.OwnerEntity.Value == null) return;
 
-			var player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Value.Index);
+			SteamID steamId = null;
+			CCSPlayerController player;
+			
+			if (weapon.OriginalOwnerXuidLow > 0)
+			{
+				steamId = new SteamID(weapon.OriginalOwnerXuidLow);
+			}
+			
+			if (steamId != null && steamId.IsValid())
+			{
+				player = Utilities.GetPlayers().FirstOrDefault(p => p.IsValid() && p.SteamID == steamId.SteamId64);
+
+				if (player == null) {
+					player = Utilities.GetPlayerFromSteamId(weapon.OriginalOwnerXuidLow);
+				}
+			}
+			else
+			{
+				var gun = weapon.As<CCSWeaponBaseGun>();
+				player = Utilities.GetPlayerFromIndex((int)weapon.OwnerEntity.Index);
+			}
+
+			if (string.IsNullOrEmpty(player?.PlayerName)) return;
 			if (!player.IsValid()) return;
 
 			GivePlayerWeaponSkin(player, weapon);
 		});
+		
 	}
 }

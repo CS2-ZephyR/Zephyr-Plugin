@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -31,6 +32,9 @@ public partial class Module
 		if (result.Glove != 0)
 			_playerGlove[steamId] = result.Glove;
 
+		if (result.Music != 0)
+			_playerMusic[steamId] = result.Music;
+
 		if (!string.IsNullOrEmpty(result.Agent.Ct))
 			_playerAgent[steamId][CsTeam.CounterTerrorist] = result.Agent.Ct;
 		
@@ -38,28 +42,28 @@ public partial class Module
 			_playerAgent[steamId][CsTeam.Terrorist] = result.Agent.T;
 	}
 	
-    private void GivePlayerWeaponSkin(CCSPlayerController player, CEconEntity weapon)
+    private void GivePlayerWeaponSkin(CCSPlayerController player, CBasePlayerWeapon weapon)
 	{
-		if (!player.IsValid()) return;
-
+		if (!player.IsValid() || !weapon.IsValid) return;
 		if (!_playerDetails.ContainsKey(player.SteamID)) return;
+
 		int[] newPaints = { 1171, 1170, 1169, 1164, 1162, 1161, 1159, 1175, 1174, 1167, 1165, 1168, 1163, 1160, 1166, 1173 };
 		
 		var isKnife = weapon.DesignerName.Contains("knife") || weapon.DesignerName.Contains("bayonet");
-
 		switch (isKnife)
 		{
 			case true when !_playerKnife.ContainsKey(player.SteamID):
 			case true when _playerKnife[player.SteamID] == "weapon_knife":
 				return;
+			
 			case true:
 			{
-				var newDefIndex = WeaponDefindex.FirstOrDefault(x => x.Value == _playerKnife[player.SteamID]);
+				var newDefIndex = WeaponIndex.FirstOrDefault(x => x.Value == _playerKnife[player.SteamID]);
 				if (newDefIndex.Key == 0) return;
 
 				if (weapon.AttributeManager.Item.ItemDefinitionIndex != newDefIndex.Key)
 				{
-					SubclassChange(weapon, (ushort)newDefIndex.Key);
+					SubclassChange(weapon, (ushort) newDefIndex.Key);
 				}
 
 				weapon.AttributeManager.Item.ItemDefinitionIndex = (ushort)newDefIndex.Key;
@@ -67,29 +71,22 @@ public partial class Module
 				break;
 			}
 		}
-		
-		int weaponDefIndex = weapon.AttributeManager.Item.ItemDefinitionIndex;
 
-		if (!_playerDetails[player.SteamID].ContainsKey(weaponDefIndex)) return;
-		var weaponInfo = _playerDetails[player.SteamID][weaponDefIndex];
-		
+		if (!_playerDetails[player.SteamID].TryGetValue(weapon.AttributeManager.Item.ItemDefinitionIndex, out var detail) || detail.Paint == 0) return;
+
 		weapon.AttributeManager.Item.ItemID = 16384;
 		weapon.AttributeManager.Item.ItemIDLow = 16384;
 		weapon.AttributeManager.Item.ItemIDHigh = 0;
-		weapon.FallbackPaintKit = weaponInfo.Paint;
-		weapon.FallbackSeed = weaponInfo.Seed;
-		weapon.FallbackWear = weaponInfo.Wear;
-		if (!string.IsNullOrEmpty(weaponInfo.Name)) new SchemaString<CEconItemView>(weapon.AttributeManager.Item, "m_szCustomName").Set(weaponInfo.Name);
-		CAttributeList_SetOrAddAttributeValueByName.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weapon.FallbackPaintKit);
+		weapon.FallbackPaintKit = detail.Paint;
+		weapon.FallbackSeed = detail.Seed;
+		weapon.FallbackWear = detail.Wear;
+		_vFunc1.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weapon.FallbackPaintKit);
 
-		if (weapon.FallbackPaintKit == 0) return;
+		if (weapon.FallbackPaintKit == 0 || isKnife) return;
 
-		if (!isKnife)
-		{
-			UpdatePlayerWeaponMeshGroupMask(player, weapon, !newPaints.Contains(weapon.FallbackPaintKit));
-		}
+		UpdatePlayerWeaponMeshGroupMask(player, weapon, !newPaints.Contains(weapon.FallbackPaintKit));
 	}
-    
+
 	private void RefreshGloves(CCSPlayerController player)
 	{
 		if (!player.IsValid() || (LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE) return;
@@ -97,7 +94,7 @@ public partial class Module
 		var pawn = player.PlayerPawn.Value;
 		if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE) return;
 
-		var model = pawn.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName ?? string.Empty;
+		var model = pawn.CBodyComponent?.SceneNode?.GetSkeletonInstance()?.ModelState.ModelName ?? string.Empty;
 		if (!string.IsNullOrEmpty(model))
 		{
 			pawn.SetModel("characters/models/tm_jumpsuit/tm_jumpsuit_varianta.vmdl");
@@ -106,36 +103,36 @@ public partial class Module
 
 		Plugin.AddTimer(0.06f, () =>
 		{
-			try
-			{
-				if (!player.IsValid || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE) return;
-				if (!_playerGlove.TryGetValue(player.SteamID, out var gloveInfo) || gloveInfo == 0) return;
-				
-				var weaponInfo = _playerDetails[player.SteamID][gloveInfo];
+			if (!player.IsValid) return;
+			if (!_playerGlove.TryGetValue(player.SteamID, out var gloveInfo) || gloveInfo == 0) return;
+			
+			var pawn2 = player.PlayerPawn.Value;
+			if (pawn2 == null || !pawn2.IsValid || pawn2.LifeState != (byte)LifeState_t.LIFE_ALIVE) return;
 
-				var item = pawn.EconGloves;
-				item.ItemDefinitionIndex = gloveInfo;
-				item.ItemIDLow = 16384 & 0xFFFFFFFF;
-				item.ItemIDHigh = 16384;
+			var weaponInfo = _playerDetails[player.SteamID][gloveInfo];
 
-				CAttributeList_SetOrAddAttributeValueByName.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weaponInfo.Paint);
-				CAttributeList_SetOrAddAttributeValueByName.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture seed", weaponInfo.Seed);
-				CAttributeList_SetOrAddAttributeValueByName.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture wear", weaponInfo.Wear);
+			var item = pawn2.EconGloves;
+			item.ItemDefinitionIndex = (ushort) gloveInfo;
+			item.ItemIDLow = 16384 & 0xFFFFFFFF;
+			item.ItemIDHigh = 16384;
 
-				item.Initialized = true;
+			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weaponInfo.Paint);
+			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture seed", weaponInfo.Seed);
+			_vFunc1.Invoke(item.NetworkedDynamicAttributes.Handle, "set item texture wear", weaponInfo.Wear);
 
-				CBaseModelEntity_SetBodygroup.Invoke(pawn, "default_gloves", 1);
-			}
-			catch (Exception)
-			{
-				// ignored
-			}
+			item.Initialized = true;
+
+			_vFunc2.Invoke(pawn2, "default_gloves", 1);
 		}, TimerFlags.STOP_ON_MAPCHANGE);
 	}
 
 	private void SubclassChange(NativeEntity weapon, ushort itemD)
 	{
-		VirtualFunction.Create<nint, string, int>(GameData.GetSignature("ChangeSubclass"))(weapon.Handle, itemD.ToString());
+		var subclassChangeFunc = VirtualFunction.Create<nint, string, int>(
+			GameData.GetSignature("ChangeSubclass")
+		);
+
+		subclassChangeFunc(weapon.Handle, itemD.ToString());
 	}
 
 	private void UpdateWeaponMeshGroupMask(CBaseEntity weapon, bool isLegacy = false)
@@ -143,17 +140,15 @@ public partial class Module
 		if (weapon.CBodyComponent?.SceneNode == null) return;
 		
 		var skeleton = weapon.CBodyComponent.SceneNode.GetSkeletonInstance();
-		{
-			var value = (ulong)(isLegacy ? 2 : 1);
+		var value = (ulong)(isLegacy ? 2 : 1);
 
-			if (skeleton.ModelState.MeshGroupMask != value)
-			{
-				skeleton.ModelState.MeshGroupMask = value;
-			}
+		if (skeleton.ModelState.MeshGroupMask != value)
+		{
+			skeleton.ModelState.MeshGroupMask = value;
 		}
 	}
 
-	private void UpdatePlayerWeaponMeshGroupMask(CCSPlayerController player, CBaseEntity weapon, bool isLegacy)
+	private void UpdatePlayerWeaponMeshGroupMask(CCSPlayerController player, CBasePlayerWeapon weapon, bool isLegacy)
 	{
 		UpdateWeaponMeshGroupMask(weapon, isLegacy);
 
@@ -167,39 +162,35 @@ public partial class Module
 	private void GivePlayerAgent(CCSPlayerController player)
 	{
 		if (!_playerAgent.ContainsKey(player.SteamID)) return;
-
-		try
+		
+		var model = player.TeamNum == 3 ? _playerAgent[player.SteamID][CsTeam.CounterTerrorist] : _playerAgent[player.SteamID][CsTeam.Terrorist];
+		if (string.IsNullOrEmpty(model)) return;
+		if (player.PlayerPawn.Value == null) return;
+		
+		Server.NextFrame(() =>
 		{
-			Server.NextFrame(() =>
-			{
-				_playerAgent[player.SteamID].TryGetValue(player.Team, out var model);
-				if (model == null) return;
-
-				player.PlayerPawn.Value!.SetModel($"characters/models/{model}.vmdl");
-			});
-		}
-		catch (Exception)
-		{
-			// ignored
-		}
+			player.PlayerPawn.Value.SetModel(
+				$"characters/models/{model}.vmdl"
+			);
+		});
 	}
 
-	private CCSPlayerController GetPlayerFromItemServices(NativeObject itemServices)
+	private void GiveMusicKit(CCSPlayerController player)
 	{
-		return Utilities.GetPlayers().FirstOrDefault(player => player.PlayerPawn.Value != null && player.PlayerPawn.Value.ItemServices != null && player.PlayerPawn.Value != null && player.PlayerPawn.Value.ItemServices.Handle == itemServices.Handle);
+		if (!_playerMusic.ContainsKey(player.SteamID)) return;
+		if (player.InventoryServices == null) return;
+
+		player.InventoryServices.MusicID = (ushort)_playerMusic[player.SteamID];
 	}
 
-	private static CBaseViewModel GetPlayerViewModel(CCSPlayerController player)
+	private CBaseViewModel GetPlayerViewModel(CCSPlayerController player)
 	{
 		if (player.PlayerPawn.Value == null || player.PlayerPawn.Value.ViewModelServices == null) return null;
-		
-		var viewModelServices = new CCSPlayer_ViewModelServices(player.PlayerPawn.Value.ViewModelServices!.Handle);
+		CCSPlayer_ViewModelServices viewModelServices = new(player.PlayerPawn.Value.ViewModelServices!.Handle);
 		var ptr = viewModelServices.Handle + Schema.GetSchemaOffset("CCSPlayer_ViewModelServices", "m_hViewModel");
 		var references = MemoryMarshal.CreateSpan(ref ptr, 3);
-		
 		var viewModel = (CHandle<CBaseViewModel>)Activator.CreateInstance(typeof(CHandle<CBaseViewModel>), references[0])!;
 		if (viewModel == null || viewModel.Value == null) return null;
-		
 		return viewModel.Value;
 	}
 }
