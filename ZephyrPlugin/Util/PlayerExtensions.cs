@@ -22,14 +22,14 @@ public static class PlayerExtensions
     
     public static bool CheckPermission(this CCSPlayerController player, Func<CCSPlayerController, bool> func)
     {
-        var isAdmin = func.Invoke(player);
+        var hasPermission = func.Invoke(player);
 
-        if (!isAdmin)
+        if (!hasPermission)
         {
             Logger.Chat(player, "{Red}권한이 없습니다.");
         }
 
-        return !isAdmin;
+        return !hasPermission;
     }
 
     public static void PlaySound(this CCSPlayerController player, string sound)
