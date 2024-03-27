@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -80,6 +79,10 @@ public partial class Module
 		weapon.FallbackPaintKit = detail.Paint;
 		weapon.FallbackSeed = detail.Seed;
 		weapon.FallbackWear = detail.Wear;
+		
+		if (!string.IsNullOrEmpty(detail.Name))
+			new SchemaString<CEconItemView>(weapon.AttributeManager.Item, "m_szCustomName").Set(detail.Name);
+		
 		_vFunc1.Invoke(weapon.AttributeManager.Item.NetworkedDynamicAttributes.Handle, "set item texture prefab", weapon.FallbackPaintKit);
 
 		if (weapon.FallbackPaintKit == 0 || isKnife) return;
