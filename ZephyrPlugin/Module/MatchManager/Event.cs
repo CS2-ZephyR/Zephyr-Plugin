@@ -43,13 +43,6 @@ public partial class Module
     {
         var count = 21;
 
-        Task.Run(async () =>
-        {
-            await _collection.UpdateManyAsync(
-                Builders<Match>.Filter.Eq(x => x.Id, Match.Id),
-                Builders<Match>.Update.Set(x => x.End, true));
-        });
-        
         Plugin.AddTimer(1.0f, () =>
         {
             Logger.All($"{{Lime}}{--count}초 {{Default}}후 서버가 종료됩니다.");
