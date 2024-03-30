@@ -1,10 +1,7 @@
-﻿using System.Net.WebSockets;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using MongoDB.Driver;
-using ZephyrPlugin.Module.MatchManager.Data;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.MatchManager;
@@ -14,7 +11,7 @@ public partial class Module
     public override void RegisterEvents()
     {
         Plugin.RegisterListener<Listeners.OnMapStart>(OnMapStart);
-        Plugin.RegisterEventHandler<EventCsIntermission>(OnIntermission);
+        Plugin.RegisterEventHandler<EventCsWinPanelMatch>(OnGameEnd);
         Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
     }
 
@@ -22,33 +19,15 @@ public partial class Module
     {
         Server.ExecuteCommand($"mp_teamname_1 {Match.Team1.Name}");
         Server.ExecuteCommand($"mp_teamname_2 {Match.Team2.Name}");
-
-        Plugin.AddTimer(3f, () =>
-        {
-            _socket.Send("server_open");
-        });
+        
+        _socket.Send("server_open");
     }
     
-    private HookResult OnIntermission(EventCsIntermission @event, GameEventInfo info)
+    private HookResult OnGameEnd(EventCsWinPanelMatch @event, GameEventInfo info)
     {
         var count = 21;
-     
-        var teams = Utilities.FindAllEntitiesByDesignerName<CCSTeam>("cs_team_manager");
-
-        var ccsTeams = teams.ToList();
-        var team1 = ccsTeams.Single(x => x.ClanTeamname == Match.Team1.Name);
-        var team2 = ccsTeams.Single(x => x.ClanTeamname == Match.Team2.Name);
-
-        var win = team1.Score > team2.Score ? 1 : team1.Score < team2.Score ? 2 : 0;
-
-        _collection.UpdateOne(
-            Builders<Match>.Filter.Eq("_id", Match.Id),
-            Builders<Match>.Update.Set("Win", win));
         
-        Plugin.AddTimer(1f, () =>
-        {
-            _socket.Send("server_close");
-        });
+        _socket.Send("server_close");
         
         Plugin.AddTimer(1.0f, () =>
         {
