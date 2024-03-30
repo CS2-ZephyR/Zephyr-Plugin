@@ -84,7 +84,7 @@ public partial class Module
             {
                 player.GiveNamedItem("weapon_taser");
             }
-        }, TimerFlags.STOP_ON_MAPCHANGE);
+        });
 
         return HookResult.Continue;
     }

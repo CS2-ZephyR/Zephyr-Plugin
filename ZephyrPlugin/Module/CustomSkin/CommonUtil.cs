@@ -127,7 +127,7 @@ public partial class Module
 			item.Initialized = true;
 
 			_vFunc2.Invoke(pawn2, "default_gloves", 1);
-		}, TimerFlags.STOP_ON_MAPCHANGE);
+		});
 	}
 
 	private void SubclassChange(NativeEntity weapon, ushort itemD)

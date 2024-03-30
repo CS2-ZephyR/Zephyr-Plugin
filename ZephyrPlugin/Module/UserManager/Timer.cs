@@ -30,6 +30,6 @@ public partial class Module
                     Utilities.SetStateChanged(player, "CBasePlayerController", "m_iszPlayerName");
                 });
             }
-        }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }, TimerFlags.REPEAT);
     }
 }

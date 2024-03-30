@@ -34,7 +34,7 @@ public partial class Module
             if (_timer1 == null) return;
             _timer1.Kill();
             _timer1 = null;
-        }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }, TimerFlags.REPEAT);
     }
 
     private void RunTimer2()
@@ -65,6 +65,6 @@ public partial class Module
             if (_timer2 == null) return;
             _timer2.Kill();
             _timer2 = null;
-        }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }, TimerFlags.REPEAT);
     }
 }

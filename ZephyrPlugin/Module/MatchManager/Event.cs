@@ -28,7 +28,7 @@ public partial class Module
                 {
                     Server.ExecuteCommand("quit");
                 });
-            }, TimerFlags.STOP_ON_MAPCHANGE);
+            });
             
             throw new Exception("매치가 존재하지 않습니다. 5초 후 인스턴스가 종료됩니다.");
         }
@@ -49,7 +49,7 @@ public partial class Module
             if (count >= 0) return;
             
             Server.ExecuteCommand("quit");
-        }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }, TimerFlags.REPEAT);
 
         return HookResult.Continue;
     }
