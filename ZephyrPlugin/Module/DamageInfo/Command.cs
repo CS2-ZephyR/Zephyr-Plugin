@@ -15,16 +15,16 @@ public partial class Module
     private void OnHpCommand(CCSPlayerController player, CommandInfo _)
     {
         if (!player.IsValid()) return;
-        if (!player.CheckPermission(x => x.LifeState == (byte)LifeState_t.LIFE_ALIVE)) return;
+        if (player.CheckPermission(x => x.LifeState == (byte)LifeState_t.LIFE_ALIVE)) return;
         
-        foreach (var player1 in Utilities.GetPlayers().Where(x => !x.IsValid()).Where(x => x.Team == player.Team))
+        foreach (var player1 in Utilities.GetPlayers().Where(x => x.IsValid()).Where(x => x.Team != player.Team))
         {
-            foreach (var player2 in Utilities.GetPlayers().Where(x => !x.IsValid()).Where(x => x.Team != player.Team))
+            if (!_damage.TryGetValue(new Tuple<ulong, ulong>(player1.SteamID, player.SteamID), out var damageInfo)) continue;
+            if (player1.LifeState != (byte)LifeState_t.LIFE_ALIVE) continue;
+            
+            foreach (var player2 in Utilities.GetPlayers().Where(x => x.IsValid()).Where(x => x.Team == player.Team))
             {
-                if (!_damage.TryGetValue(new Tuple<ulong, ulong>(player1.SteamID, player2.SteamID), out var damageInfo)) continue;
-                if (player2.LifeState == (byte)LifeState_t.LIFE_ALIVE) continue;
-                
-                Logger.Chat(player1, $"{{Red}}{player.PlayerName}{{Default}}이 {{Lime}}{player2.PlayerName} {{Default}}에게 준 피해: {{LightRed}}{damageInfo.Item2}{{Default}}딜");
+                Logger.Chat(player2, $"{{Red}}{player.PlayerName}{{Default}}이 {{Lime}}{player1.PlayerName} {{Default}}에게 준 피해: {{LightRed}}{damageInfo.Item2}{{Default}}딜 {{Grey}}({damageInfo.Item1}대)");
             }
         }
     }

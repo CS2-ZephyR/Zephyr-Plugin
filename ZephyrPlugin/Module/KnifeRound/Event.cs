@@ -50,6 +50,7 @@ public partial class Module
         Logger.All($"{{Magenta}}{team.Name}{{White}} 팀이 이겼습니다. {{Green}}리더 {UserManager.Module.Names[_winnerLeader]}{{White}}님은 진영을 선택해주세요. {{Grey}}(.ct / .t)");
         
         Server.ExecuteCommand("mp_give_player_c4 1");
+        Server.ExecuteCommand("mp_freezetime 10");
         Server.ExecuteCommand("mp_warmup_start");
         
         return HookResult.Continue;

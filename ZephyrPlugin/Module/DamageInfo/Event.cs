@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.DamageInfo;
@@ -19,9 +20,9 @@ public partial class Module
         _damage.Clear();
         _death.Clear();
         
-        foreach (var player1 in Utilities.GetPlayers().Where(player => !player.IsValid()))
+        foreach (var player1 in Utilities.GetPlayers().Where(player => player.IsValid()))
         {
-            foreach (var player2 in Utilities.GetPlayers().Where(player => !player.IsValid()).Where(player => player.Team != player1.Team))
+            foreach (var player2 in Utilities.GetPlayers().Where(player => player.IsValid()).Where(player => player.Team != player1.Team))
             {
                 _damage[new Tuple<ulong, ulong>(player1.SteamID, player2.SteamID)] = new ValueTuple<int, int>(0, 0);
             }
@@ -39,21 +40,20 @@ public partial class Module
     {
         if (KnifeRound.Module.KnifeRound) return HookResult.Continue;
         
-        foreach (var player1 in Utilities.GetPlayers().Where(player => !player.IsValid()))
+        foreach (var player1 in Utilities.GetPlayers().Where(player => player.IsValid()))
         {
-            Logger.Chat(player1, "{Magenta}==================== 데미지 정보 ====================");
+            Logger.Chat(player1, "================ 데미지 정보 ================");
             
-            foreach (var player2 in Utilities.GetPlayers().Where(player => !player.IsValid()).Where(player => player.Team != player1.Team))
+            foreach (var player2 in Utilities.GetPlayers().Where(player => player.IsValid()).Where(player => player.Team != player1.Team))
             {
-                if (!_damage.TryGetValue(new Tuple<ulong, ulong>(player1.SteamID, player2.SteamID), out var damageInfo)) continue;
-                if (!_death.TryGetValue(player2.SteamID, out var killer)) continue;
+                if (!_damage.TryGetValue(new Tuple<ulong, ulong>(player2.SteamID, player1.SteamID), out var damageInfo)) continue;
                 
-                var targetColor = killer == player1.SteamID ? "{Red}" : "{Lime}";
+                var targetColor = _death.TryGetValue(player2.SteamID, out var killer) && killer == player1.SteamID ? "{Red}" : "{Lime}";
             
-                Logger.Chat(player1, $"{targetColor}{player2.PlayerName} {{Default}}에게 준 피해: {{LightRed}}{damageInfo.Item2}{{Default}}딜 {{Grey}}({{LightRed}}{damageInfo.Item1}{{Grey}}대)");
+                Logger.Chat(player1, $"{targetColor}{player2.PlayerName} {{Default}}에게 준 피해: {{LightRed}}{damageInfo.Item2}{{Default}}딜 {{Grey}}({damageInfo.Item1}대)");
             }
             
-            Logger.Chat(player1, "{Magenta}=====================================================");
+            Logger.Chat(player1, "=========================================");
         }
         
         return HookResult.Continue;
@@ -67,13 +67,16 @@ public partial class Module
         if (!victim.IsValid() || !attacker.IsValid()) return HookResult.Continue;
         if (victim.Team == attacker.Team) return HookResult.Continue;
 
-        if (!_damage.TryGetValue(new Tuple<ulong, ulong>(attacker.SteamID, victim.SteamID), out var damageInfo)) return HookResult.Continue;
+        var key = new Tuple<ulong, ulong>(victim.SteamID, attacker.SteamID);
+        if (!_damage.TryGetValue(key, out var damageInfo)) return HookResult.Continue;
         
         damageInfo.Item1 += 1;
         damageInfo.Item2 += @event.DmgHealth;
 
         damageInfo.Item2 = Math.Min(100, damageInfo.Item2);
 
+        _damage[key] = damageInfo;
+        
         return HookResult.Continue;
     }
     
