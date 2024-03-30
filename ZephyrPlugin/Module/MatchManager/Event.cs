@@ -3,6 +3,8 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using MongoDB.Driver;
+using ZephyrPlugin.Module.MatchManager.Data;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.MatchManager;
@@ -30,7 +32,19 @@ public partial class Module
     private HookResult OnIntermission(EventCsIntermission @event, GameEventInfo info)
     {
         var count = 21;
+     
+        var teams = Utilities.FindAllEntitiesByDesignerName<CCSTeam>("cs_team_manager");
 
+        var ccsTeams = teams.ToList();
+        var team1 = ccsTeams.Single(x => x.ClanTeamname == Match.Team1.Name);
+        var team2 = ccsTeams.Single(x => x.ClanTeamname == Match.Team2.Name);
+
+        var win = team1.Score > team2.Score ? 1 : team1.Score < team2.Score ? 2 : 0;
+
+        _collection.UpdateOne(
+            Builders<Match>.Filter.Eq("_id", Match.Id),
+            Builders<Match>.Update.Set("Win", win));
+        
         Plugin.AddTimer(1f, () =>
         {
             _socket.Send("server_close");
