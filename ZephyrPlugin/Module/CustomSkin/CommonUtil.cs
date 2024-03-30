@@ -152,7 +152,7 @@ public partial class Module
 		}
 	}
 
-	private void UpdatePlayerWeaponMeshGroupMask(CCSPlayerController player, CBasePlayerWeapon weapon, bool isLegacy)
+	private void UpdatePlayerWeaponMeshGroupMask(CCSPlayerController player, CBaseEntity weapon, bool isLegacy)
 	{
 		UpdateWeaponMeshGroupMask(weapon, isLegacy);
 
@@ -179,10 +179,10 @@ public partial class Module
 
 	private void GiveMusicKit(CCSPlayerController player)
 	{
-		if (!_playerMusic.ContainsKey(player.SteamID)) return;
+		if (!_playerMusic.TryGetValue(player.SteamID, out var music)) return;
 		if (player.InventoryServices == null) return;
 
-		player.InventoryServices.MusicID = (ushort)_playerMusic[player.SteamID];
+		player.InventoryServices.MusicID = (ushort)music;
 	}
 
 	private CBaseViewModel GetPlayerViewModel(CCSPlayerController player)

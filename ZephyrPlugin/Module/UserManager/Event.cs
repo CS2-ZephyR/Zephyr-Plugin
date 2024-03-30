@@ -31,7 +31,7 @@ public partial class Module
             {
                 Names[steamId] = result.Name;
 
-                Server.NextFrame(() =>
+                await Server.NextFrameAsync(() =>
                 {
                     player.Clan = "ZephyR";
                     Plugin.AddTimer(0.2f, () =>
@@ -44,7 +44,7 @@ public partial class Module
             }
             else
             {
-                Server.NextFrame(() =>
+                await Server.NextFrameAsync(() =>
                 {
                     if (!isAdmin)
                     {

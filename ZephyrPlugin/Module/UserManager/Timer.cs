@@ -2,7 +2,6 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using ZephyrPlugin.Util;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace ZephyrPlugin.Module.UserManager;
 
