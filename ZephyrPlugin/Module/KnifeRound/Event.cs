@@ -7,7 +7,8 @@ namespace ZephyrPlugin.Module.KnifeRound;
 
 public partial class Module
 {
-    private bool _knifeRound = true;
+    public static bool KnifeRound = true;
+    
     private bool _voteRound;
     private ulong _winnerLeader;
     
@@ -20,7 +21,7 @@ public partial class Module
 
     private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
-        if (!_knifeRound) return HookResult.Continue;
+        if (!KnifeRound) return HookResult.Continue;
         
         var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
         if (gameRules is { WarmupPeriod: true }) return HookResult.Continue;
@@ -32,14 +33,14 @@ public partial class Module
     
     private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
-        if (!_knifeRound) return HookResult.Continue;
+        if (!KnifeRound) return HookResult.Continue;
         
         var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
         if (gameRules is { WarmupPeriod: true }) return HookResult.Continue;
         
         if (@event.Winner is not (2 or 3)) return HookResult.Continue;
         
-        _knifeRound = false;
+        KnifeRound = false;
         _voteRound = true;
         
         var team = @event.Winner == 3 ? MatchManager.Module.Match.Team1 : MatchManager.Module.Match.Team2;
@@ -48,7 +49,6 @@ public partial class Module
         Logger.All($"{{Magenta}}{team.Name}{{White}} 팀이 이겼습니다. {{Green}}리더 {UserManager.Module.Names[_winnerLeader]}{{White}}님은 진영을 선택해주세요. {{Grey}}(.ct / .t)");
         
         Server.ExecuteCommand("mp_give_player_c4 1");
-        Server.ExecuteCommand("mp_freezetime 10");
         Server.ExecuteCommand("mp_warmup_start");
         
         return HookResult.Continue;
@@ -56,7 +56,7 @@ public partial class Module
 
     private HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
     {
-        if (!_knifeRound) return HookResult.Continue;
+        if (!KnifeRound) return HookResult.Continue;
         
         var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
         if (gameRules is { WarmupPeriod: true }) return HookResult.Continue;
@@ -71,9 +71,8 @@ public partial class Module
             
             foreach (var weapon in player.PlayerPawn.Value.WeaponServices!.MyWeapons)
             {
-                if (weapon is not { IsValid: true, Value.IsValid: true } ||
-                    weapon.Value.DesignerName.Contains("weapon_knife")) continue;
-
+                if (weapon is not { IsValid: true, Value.IsValid: true } || weapon.Value.DesignerName.Contains("weapon_knife") || weapon.Value.DesignerName.Contains("weapon_bayonet")) continue;
+            
                 player.ExecuteClientCommand("slot3");
                 player.DropActiveWeapon();
                 weapon.Value.Remove();
