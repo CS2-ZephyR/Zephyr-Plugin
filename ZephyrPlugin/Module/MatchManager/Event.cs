@@ -1,8 +1,8 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Net.WebSockets;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using MongoDB.Driver;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.MatchManager;
@@ -16,16 +16,26 @@ public partial class Module
         Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
     }
 
-    private void OnMapStart(string _)
+    private void OnMapStart(string map)
     {
         Server.ExecuteCommand($"mp_teamname_1 {Match.Team1.Name}");
         Server.ExecuteCommand($"mp_teamname_2 {Match.Team2.Name}");
+
+        Plugin.AddTimer(3f, () =>
+        {
+            _socket.Send("server_open");
+        });
     }
     
     private HookResult OnIntermission(EventCsIntermission @event, GameEventInfo info)
     {
         var count = 21;
 
+        Plugin.AddTimer(1f, () =>
+        {
+            _socket.Send("server_close");
+        });
+        
         Plugin.AddTimer(1.0f, () =>
         {
             Logger.All($"{{Lime}}{--count}초 {{Default}}후 서버가 종료됩니다.");
