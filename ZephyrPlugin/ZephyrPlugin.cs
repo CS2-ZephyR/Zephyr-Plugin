@@ -24,11 +24,7 @@ public class ZephyrPlugin : BasePlugin, IPluginConfig<Config>
             zephyrModule.OnLoad(hotReload);
             zephyrModule.RegisterCommands();
             zephyrModule.RegisterEvents();
-            
-            RegisterListener<Listeners.OnMapStart>((_) =>
-            {
-                zephyrModule.RegisterTimers();
-            });
+            zephyrModule.RegisterTimers();
             
             _logger.Info($"{zephyrModule.ModuleName} is enabled.");
         }

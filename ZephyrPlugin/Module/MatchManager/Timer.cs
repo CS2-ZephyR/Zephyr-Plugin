@@ -11,11 +11,11 @@ public partial class Module
 
     private static Timer _timer1;
     private static Timer _timer2;
-
+    
     public override void RegisterTimers()
     {
         _totalPlayer = Match.Team1.Member.Count + Match.Team2.Member.Count;
-
+        
         RunTimer1();
         RunTimer2();
     }
@@ -30,6 +30,8 @@ public partial class Module
             Logger.CenterAll($"접속한 플레이어: {playerCount}/{_totalPlayer} 명", red: true);
 
             if (playerCount < _totalPlayer) return;
+
+            if (_timer1 == null) return;
             _timer1.Kill();
             _timer1 = null;
         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
@@ -60,7 +62,8 @@ public partial class Module
 
             Server.ExecuteCommand("mp_warmup_end");
 
-            _timer2!.Kill();
+            if (_timer2 == null) return;
+            _timer2.Kill();
             _timer2 = null;
         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
     }
