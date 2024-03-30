@@ -16,26 +16,10 @@ public partial class Module
         Plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
     }
 
-    private void OnMapStart(string map)
+    private void OnMapStart(string _)
     {
-        Match = _collection.Find(x => !x.End).SingleOrDefault();
-
-        if (Match == null)
-        {
-            Plugin.AddTimer(5f, () =>
-            {
-                Server.NextFrame(() =>
-                {
-                    Server.ExecuteCommand("quit");
-                });
-            });
-            
-            throw new Exception("매치가 존재하지 않습니다. 5초 후 인스턴스가 종료됩니다.");
-        }
-        
-        Logger.All($"매치 ID: {{Green}}{Match.Id}");
-        
-        ChangeTeamName();
+        Server.ExecuteCommand($"mp_teamname_1 {Match.Team1.Name}");
+        Server.ExecuteCommand($"mp_teamname_2 {Match.Team2.Name}");
     }
     
     private HookResult OnIntermission(EventCsIntermission @event, GameEventInfo info)
