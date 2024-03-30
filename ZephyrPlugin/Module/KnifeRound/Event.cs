@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
+using ZephyrPlugin.Module.MatchManager.Data;
 using ZephyrPlugin.Util;
 
 namespace ZephyrPlugin.Module.KnifeRound;
@@ -78,8 +79,11 @@ public partial class Module
                 weapon.Value.Remove();
             }
 
-            player.GiveNamedItem("weapon_taser");
-            
+            if (MatchManager.Module.Match.Team1.Member[0] == player.SteamID ||
+                MatchManager.Module.Match.Team2.Member[0] == player.SteamID)
+            {
+                player.GiveNamedItem("weapon_taser");
+            }
         }, TimerFlags.STOP_ON_MAPCHANGE);
 
         return HookResult.Continue;
