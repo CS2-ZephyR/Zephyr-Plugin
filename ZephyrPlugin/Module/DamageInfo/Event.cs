@@ -39,7 +39,7 @@ public partial class Module
     {
         foreach (var player1 in Utilities.GetPlayers().Where(player => !player.IsValid()))
         {
-            Logger.Chat(player1, "{LightBlue}==================== 데미지 정보 ====================");
+            Logger.Chat(player1, "{Magenta}==================== 데미지 정보 ====================");
             
             foreach (var player2 in Utilities.GetPlayers().Where(player => !player.IsValid()).Where(player => player.Team != player1.Team))
             {
@@ -51,7 +51,7 @@ public partial class Module
                 Logger.Chat(player1, $"{targetColor}{player2.PlayerName} {{Default}}에게 준 피해: {{LightRed}}{damageInfo.Item2}{{Default}}딜 {{Grey}}({{LightRed}}{damageInfo.Item1}{{Grey}}대)");
             }
             
-            Logger.Chat(player1, "{LightBlue}=====================================================");
+            Logger.Chat(player1, "{Magenta}=====================================================");
         }
         
         return HookResult.Continue;
