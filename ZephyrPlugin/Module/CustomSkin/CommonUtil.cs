@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using MongoDB.Driver;
 using ZephyrPlugin.Module.CustomSkin.Data;
@@ -42,7 +41,7 @@ public partial class Module
 			_playerAgent[steamId][CsTeam.Terrorist] = result.Agent.T;
 	}
 	
-    private void GivePlayerWeaponSkin(CCSPlayerController player, CBasePlayerWeapon weapon)
+    private void GivePlayerWeaponSkin(CCSPlayerController player, CEconEntity weapon)
 	{
 		if (!player.IsValid() || !weapon.IsValid) return;
 		if (!_playerDetails.TryGetValue(player.SteamID, out var playerDetail)) return;
