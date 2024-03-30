@@ -37,6 +37,8 @@ public partial class Module
 
     private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
+        if (KnifeRound.Module.KnifeRound) return HookResult.Continue;
+        
         foreach (var player1 in Utilities.GetPlayers().Where(player => !player.IsValid()))
         {
             Logger.Chat(player1, "{Magenta}==================== 데미지 정보 ====================");
