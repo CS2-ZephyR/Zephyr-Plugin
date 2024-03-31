@@ -68,6 +68,12 @@ public partial class Module
         Plugin.AddTimer(0.1f, () =>
         {
             if (player.InGameMoneyServices != null) player.InGameMoneyServices.Account = 0;
+
+            player.PlayerPawn.Value!.Health = 50;
+            player.PlayerPawn.Value!.VelocityModifier = 1.5F;
+            
+            Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+            Utilities.SetStateChanged(player.PlayerPawn.Value, "CCSPlayerPawnBase", "m_flVelocityModifier");
             
             foreach (var weapon in player.PlayerPawn.Value.WeaponServices!.MyWeapons)
             {
