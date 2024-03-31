@@ -17,9 +17,6 @@ public partial class Module
     {
         if (!player.IsValid()) return;
         
-        var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
-        if (gameRules is null or { GamePaused: true }) return;
-        
         Server.ExecuteCommand("mp_pause_match");
         
         Logger.All($"{{Green}}{player.PlayerName}{{White}}님이 경기를 {{Red}}일시 정지{{White}}했습니다.");
@@ -28,9 +25,6 @@ public partial class Module
     private void OnUnpauseCommand(CCSPlayerController player, CommandInfo _)
     {
         if (!player.IsValid()) return;
-        
-        var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
-        if (gameRules is null or { GamePaused: false }) return;
         
         Server.ExecuteCommand("mp_unpause_match");
         
