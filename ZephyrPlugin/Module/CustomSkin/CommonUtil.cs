@@ -1,7 +1,9 @@
 using System.Runtime.InteropServices;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using MongoDB.Driver;
 using ZephyrPlugin.Module.CustomSkin.Data;
@@ -88,6 +90,120 @@ public partial class Module
 		if (weapon.FallbackPaintKit == 0 || isKnife) return;
 
 		UpdatePlayerWeaponMeshGroupMask(player, weapon, !newPaints.Contains(weapon.FallbackPaintKit));
+	}
+    
+    private void RefreshWeapons(CCSPlayerController player)
+	{
+		if (!player.IsValid()) return;
+		if ((LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE || player.Team is CsTeam.None or CsTeam.Spectator) return;
+		if (player.PlayerPawn.Value == null || player.PlayerPawn.Value.WeaponServices == null || player.PlayerPawn.Value.ItemServices == null) return;
+
+		var weapons = player.PlayerPawn.Value.WeaponServices.MyWeapons;
+		if (weapons.Count == 0) return;
+		
+		int playerTeam = player.TeamNum;
+
+		var weaponsWithAmmo = new Dictionary<string, List<(int, int)>>();
+
+		foreach (var weapon in weapons)
+		{
+			if (!weapon.IsValid || weapon.Value == null || !weapon.Value.IsValid || !weapon.Value.DesignerName.Contains("weapon_")) continue;
+			if (weapon.Value.Entity == null || !weapon.Value.OwnerEntity.IsValid) continue;
+
+			var gun = weapon.Value.As<CCSWeaponBaseGun>();
+			if (gun.Entity == null || !gun.IsValid || !gun.VisibleinPVS) continue;
+			
+			var weaponData = weapon.Value.As<CCSWeaponBase>().VData;
+			if (weaponData == null) continue;
+
+			if (weaponData.GearSlot is gear_slot_t.GEAR_SLOT_RIFLE or gear_slot_t.GEAR_SLOT_PISTOL)
+			{
+				if (!WeaponIndex.TryGetValue(weapon.Value.AttributeManager.Item.ItemDefinitionIndex, out var weaponIndex)) continue;
+
+				var clip1 = weapon.Value.Clip1;
+				var reservedAmmo = weapon.Value.ReserveAmmo[0];
+
+				if (!weaponsWithAmmo.TryGetValue(weaponIndex, out var value))
+				{
+					weaponsWithAmmo.Add(weaponIndex, value = []);
+				}
+
+				value.Add((clip1, reservedAmmo));
+
+				if (gun.VData == null) return;
+
+				weapon.Value.Remove();
+			}
+		}
+
+		{
+			player.ExecuteClientCommand("slot 3");
+			player.ExecuteClientCommand("slot 3");
+
+			var weapon = player.PlayerPawn.Value.WeaponServices.ActiveWeapon;
+			if (!weapon.IsValid || weapon.Value == null) return;
+		
+			var weaponData = weapon.Value.As<CCSWeaponBase>().VData;
+
+			if (weapon.Value.DesignerName.Contains("knife") || weaponData?.GearSlot == gear_slot_t.GEAR_SLOT_KNIFE)
+			{
+				Plugin.AddTimer(0.3f, () =>
+				{
+					if (player.TeamNum != playerTeam) return;
+
+					player.ExecuteClientCommand("slot 3");
+					var gun = weapon.Value.As<CCSWeaponBaseGun>();
+					player.DropActiveWeapon();
+
+					Plugin.AddTimer(0.7f, () =>
+					{
+						if (player.TeamNum != playerTeam) return;
+
+						if (!gun.IsValid || gun.State != CSWeaponState_t.WEAPON_NOT_CARRIED) return;
+
+						gun.Remove();
+					});
+
+					GiveKnifeToPlayer(player);
+				});
+			}
+		}
+		
+		Plugin.AddTimer(0.6f, () =>
+		{
+			foreach (var entry in weaponsWithAmmo)
+			{
+				foreach (var ammo in entry.Value)
+				{
+					var newWeapon = new CBasePlayerWeapon(player.GiveNamedItem(entry.Key));
+					
+					Server.NextFrame(() =>
+					{
+						newWeapon.Clip1 = ammo.Item1;
+						newWeapon.ReserveAmmo[0] = ammo.Item2;
+					});
+				}
+			}
+		}, TimerFlags.STOP_ON_MAPCHANGE);
+	}
+    
+	private void GiveKnifeToPlayer(CCSPlayerController player)
+	{
+		if (!player.IsValid()) return;
+
+		if (PlayerHasKnife(player)) return;
+
+		player.GiveNamedItem(CsItem.Knife);
+	}
+	
+	private bool PlayerHasKnife(CCSPlayerController player)
+	{
+		if (player == null || !player.IsValid || !player.PlayerPawn.IsValid) return false;
+		if (player.PlayerPawn.Value == null || player.PlayerPawn.Value.WeaponServices == null || player.PlayerPawn.Value.ItemServices == null) return false;
+
+		var weapons = player.PlayerPawn.Value.WeaponServices?.MyWeapons;
+		
+		return weapons != null && weapons.Where(weapon => weapon.IsValid && weapon.Value != null && weapon.Value.IsValid).Any(weapon => weapon.Value.DesignerName.Contains("knife") || weapon.Value.DesignerName.Contains("bayonet"));
 	}
 
 	private void RefreshGloves(CCSPlayerController player)
