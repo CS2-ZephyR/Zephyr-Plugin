@@ -41,6 +41,11 @@ public partial class Module
 		
 		if (!string.IsNullOrEmpty(result.Agent.T))
 			_playerAgent[steamId][CsTeam.Terrorist] = result.Agent.T;
+
+		if (result.Smoke != null && result.Smoke.TryGetValue(Skin.Rgb.R, out var r) && result.Smoke.TryGetValue(Skin.Rgb.G, out var g) && result.Smoke.TryGetValue(Skin.Rgb.B, out var b))
+		{
+			PlayerSmoke[steamId] = new Tuple<int, int, int>(r, g, b);
+		}
 	}
 	
     private void GivePlayerWeaponSkin(CCSPlayerController player, CEconEntity weapon)

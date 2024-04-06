@@ -17,6 +17,7 @@ public partial class Module() : ZephyrModule("CustomSkin")
 	private readonly Dictionary<ulong, int> _playerMusic = new();
 	private readonly Dictionary<ulong, Dictionary<CsTeam, string>> _playerAgent = new();
 	private readonly Dictionary<ulong, Dictionary<int, Skin.SkinDetail>> _playerDetails = new();
+	public static readonly Dictionary<ulong, Tuple<int, int, int>> PlayerSmoke = new();
 
 	private readonly MemoryFunctionVoid<nint, string, float> _vFunc1 = new(GameData.GetSignature("CAttributeList_SetOrAddAttributeValueByName"));
 	private readonly MemoryFunctionVoid<CBaseModelEntity, string, long> _vFunc2 = new(GameData.GetSignature("CBaseModelEntity_SetBodygroup"));

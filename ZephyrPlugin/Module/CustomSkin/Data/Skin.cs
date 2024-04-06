@@ -17,6 +17,7 @@ public class Skin
     public int Music;
     public AgentDetail Agent;
     public Dictionary<int, SkinDetail> Detail;
+    public Dictionary<Rgb, int> Smoke;
 
     public class AgentDetail
     {
@@ -30,5 +31,10 @@ public class Skin
         public int Seed;
         public float Wear;
         public string Name;
+    }
+
+    public enum Rgb
+    {
+        R, G, B
     }
 }

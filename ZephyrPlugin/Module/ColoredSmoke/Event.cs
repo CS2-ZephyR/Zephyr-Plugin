@@ -17,15 +17,19 @@ public partial class Module
         if (!_isColoredSmoke) return;
 
         if (entity.DesignerName != "smokegrenade_projectile") return;
+        
         var projectile = new CSmokeGrenadeProjectile(entity.Handle);
+        
+        var player = projectile.Thrower.Value;
+        if (player == null) return;
 
-        if (projectile.Thrower.Value == null) return;
+        if (!CustomSkin.Module.PlayerSmoke.TryGetValue(player.Controller.Value!.SteamID, out var smoke)) return;
 
         Server.NextFrame(() =>
         {
-            projectile.SmokeColor.X = projectile.Thrower.Value.TeamNum == 2 ? 255 : 0;
-            projectile.SmokeColor.Y = 0;
-            projectile.SmokeColor.Z = projectile.Thrower.Value.TeamNum == 2 ? 0 : 255;
+            projectile.SmokeColor.X = smoke.Item1;
+            projectile.SmokeColor.Y = smoke.Item2;
+            projectile.SmokeColor.Z = smoke.Item3;
         });
     }
 }
